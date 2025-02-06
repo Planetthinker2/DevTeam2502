@@ -5,6 +5,7 @@ using UnityEngine;
 
 public class Player : MonoBehaviour
 {
+    [Header("- - - - - - - - Player Setting Variables - - - - - - - -")]
     [SerializeField] CharacterController controller;
     [SerializeField] int speed = 1;
     [SerializeField] bool canRun = true;
