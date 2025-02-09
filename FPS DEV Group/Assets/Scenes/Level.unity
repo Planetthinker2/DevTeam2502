@@ -3456,7 +3456,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6319086292977565285, guid: 56fc080e7bbacb24c86fd1e5760231bd, type: 3}
       propertyPath: m_Name
-      value: Mesh_protective suit
+      value: MainPlayer
       objectReference: {fileID: 0}
     - target: {fileID: 6319086292977565285, guid: 56fc080e7bbacb24c86fd1e5760231bd, type: 3}
       propertyPath: m_Layer
