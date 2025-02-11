@@ -6442,7 +6442,7 @@ GameObject:
   - component: {fileID: 1755182286}
   - component: {fileID: 1755182285}
   - component: {fileID: 1755182284}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Player
   m_TagString: Player
   m_Icon: {fileID: 0}
@@ -6538,11 +6538,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   controller: {fileID: 1755182289}
+  ignoreLayer:
+    serializedVersion: 2
+    m_Bits: 8
   speed: 5
   sprintMod: 3
   jumpSpeed: 15
   jumpMax: 1
   gravity: 35
+  shootDamage: 1
+  shootRate: 0.5
+  shootDist: 5
 --- !u!4 &1755182288
 Transform:
   m_ObjectHideFlags: 0
@@ -6552,7 +6558,7 @@ Transform:
   m_GameObject: {fileID: 1755182283}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.85, z: 0}
+  m_LocalPosition: {x: 0.358, y: 0.899, z: -2.55}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
