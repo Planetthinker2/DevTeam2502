@@ -12,6 +12,7 @@ public class playerController : MonoBehaviour
 
     [Tooltip("Speed at which the player moves (in units per second.)")]
     [SerializeField] int speed;
+
     Vector3 moveDir;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
