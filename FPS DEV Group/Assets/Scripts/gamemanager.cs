@@ -1,3 +1,4 @@
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class gamemanager : MonoBehaviour
@@ -16,8 +17,8 @@ public class gamemanager : MonoBehaviour
 
     int goalCount;
 
-
     // Start is called once before the first execution of Update after the MonoBehaviour is created
+    // Awake begins before start
     void Awake()
     {
         instance = this;
@@ -28,15 +29,15 @@ public class gamemanager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (Input.GetButtonDown("Cancel"))
+        if (Input.GetButtonDown("Cancel")) // Escape key
         {
-            if(menuActive == null)
+            if (menuActive == null)
             {
                 statePause();
                 menuActive = menuPause;
                 menuActive.SetActive(true);
             }
-            else if(menuActive == menuPause)
+            else if (menuActive == menuPause)
             {
                 stateUnpause();
             }
@@ -46,7 +47,7 @@ public class gamemanager : MonoBehaviour
     public void statePause()
     {
         isPaused = !isPaused;
-        Time.timeScale = 0;
+        Time.timeScale = 0; // Pause the game
         Cursor.visible = true;
         Cursor.lockState = CursorLockMode.Confined;
     }
@@ -54,7 +55,7 @@ public class gamemanager : MonoBehaviour
     public void stateUnpause()
     {
         isPaused = !isPaused;
-        Time.timeScale = 1;
+        Time.timeScale = 1; // Unpause the game
         Cursor.visible = false;
         Cursor.lockState = CursorLockMode.Locked;
         menuActive.SetActive(false);
@@ -64,7 +65,7 @@ public class gamemanager : MonoBehaviour
     public void updateGameGoal(int amount)
     {
         goalCount += amount;
-        if(goalCount <= 0)
+        if (goalCount <= 0)
         {
             statePause();
             menuActive = menuWin;
