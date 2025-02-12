@@ -7507,12 +7507,12 @@ MonoBehaviour:
     m_Bits: 0
   speed: 5
   sprintMod: 3
-  jumpSpeed: 10
+  jumpSpeed: 5
   jumpMax: 1
   gravity: 35
   shootDamage: 1
   shootRate: 0.5
-  shootDist: 10
+  shootDist: 5
 --- !u!1 &2102955165
 GameObject:
   m_ObjectHideFlags: 0
