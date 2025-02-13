@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 
 
-public class playerController : MonoBehaviour
+public class playerController : MonoBehaviour, IDamage
 {
 
     [Header("----- Player Movement -----")]
@@ -11,6 +11,8 @@ public class playerController : MonoBehaviour
     [SerializeField] CharacterController controller;
 
     [SerializeField] LayerMask ignoreLayer;
+
+    [SerializeField] int HP;
 
     [Tooltip("Speed at which the player moves (in units per second.)")]
     [SerializeField] int speed;
@@ -25,6 +27,9 @@ public class playerController : MonoBehaviour
     [SerializeField] int shootDamage;
     [SerializeField] float shootRate;
     [SerializeField] int shootDist;
+
+    [SerializeField] int meleeDamage;
+    [SerializeField] float meleeRange;
 
     int jumpCount;
 
@@ -108,5 +113,38 @@ public class playerController : MonoBehaviour
         {
             Debug.Log(hit.collider.name);
         }
+    }
+
+    void meleeAttack()
+    {
+        RaycastHit hit;
+        if (Physics.Raycast(Camera.main.transform.position, Camera.main.transform.forward, out hit, shootDist, ~ignoreLayer))
+        {
+            Debug.Log(hit.collider.name);
+            IDamage dmg = hit.collider.GetComponent<IDamage>();
+            if(dmg!= null)
+            {
+                dmg.takeDamage(meleeDamage);
+            }
+        }
+    }
+
+    public void getMeleeStats(meleeStats melee)
+    {
+        if(melee == null)
+        {
+            return;
+        }
+        meleeDamage = melee.damage;
+        meleeRange = (int)melee.attackRate;
+    }
+
+    public void takeDamage(int amount)
+    {
+       //HP -= amount;
+       // if(HP < 0)
+       // {
+       //     return;
+        
     }
 }
