@@ -6,45 +6,42 @@ using System.Collections.Generic;
 public class playerController : MonoBehaviour, IDamage
 {
 
-    [Header("----- Player Movement -----")]
+    [Header("----- Player Controller -----")]
     [Tooltip("The CharacterController component that handles player movement and collision.")]
     [SerializeField] CharacterController controller;
-
     [SerializeField] LayerMask ignoreLayer;
 
+    [Header("----- Main Player Stats -----")]
     [SerializeField] int HP;
-
-    [Tooltip("Speed at which the player moves (in units per second.)")]
     [SerializeField] int speed;
-
     [SerializeField] int sprintMod;
-
     [SerializeField] int jumpSpeed;
-
     [SerializeField] int jumpMax;
 
+    [Header("----- Other Player Stats -----")]
     [SerializeField] int gravity;
     [SerializeField] int shootDamage;
     [SerializeField] float shootRate;
     [SerializeField] int shootDist;
 
+    [Header("----- Player Melee Stats -----")]
     [SerializeField] int meleeDamage;
     [SerializeField] float meleeRange;
 
     int jumpCount;
+    int HPOrig;
 
     float shootTimer;
     
     Vector3 moveDir;
-
     Vector3 playerVel;
-
     bool isSprinting;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-     
+        HPOrig = HP;
+        updatePlayerUI();
     }
 
     // Update is called once per frame
@@ -141,10 +138,27 @@ public class playerController : MonoBehaviour, IDamage
 
     public void takeDamage(int amount)
     {
-       //HP -= amount;
-       // if(HP < 0)
-       // {
-       //     return;
+        HP -= amount;
+        StartCoroutine(flashDamageScreen());
+        updatePlayerUI();
+
+
+        if (HP <= 0)
+        {
+            gamemanager.instance.youLose();
+        }
         
+    }
+
+    IEnumerator flashDamageScreen()
+    {
+        gamemanager.instance.playerDamageScreen.SetActive(true);
+        yield return new WaitForSeconds(0.1f);
+        gamemanager.instance.playerDamageScreen.SetActive(false);
+    }
+
+    void updatePlayerUI()
+    {
+        gamemanager.instance.playerHPBar.fillAmount = (float)HP / HPOrig;
     }
 }
