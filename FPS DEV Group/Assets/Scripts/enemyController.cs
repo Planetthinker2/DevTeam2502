@@ -1,18 +1,13 @@
 using UnityEngine;
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine.AI;
-
-/// <summary>
-/// This class handles the movement and behavior of the enemy.
-/// </summary>
 
 public class enemyController : MonoBehaviour
 {
     [Header("----- Enemy Movement Settings -----")]
     [SerializeField] float walkSpeed = 2f;
     [SerializeField] float runSpeed = 5f;
-    [SerializeField] float runThreshold = 10f; // Distance at which enemy starts running
+    [SerializeField] float detectionRange = 10f;
     [SerializeField] float attackRange = 2f;
 
     [Header("----- Combat Settings -----")]
@@ -24,10 +19,15 @@ public class enemyController : MonoBehaviour
     private NavMeshAgent agent;
     private float nextAttackTime;
     private bool isAttacking;
-    private Animator animator; // Reference to enemy's animator component
+    private Animator animator;
+    private bool hasDetectedPlayer = false;
 
+    // Animation parameter names
+    private readonly string ANIM_IS_WALKING = "isWalking";
+    private readonly string ANIM_IS_RUNNING = "isRunning";
+    private readonly string ANIM_ATTACK = "Attack";
+    private readonly string ANIM_SPEED = "Speed";
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         agent = GetComponent<NavMeshAgent>();
@@ -36,19 +36,26 @@ public class enemyController : MonoBehaviour
 
         agent.stoppingDistance = attackRange;
         agent.speed = walkSpeed;
-    }
 
-    // Update is called once per frame
-    void Update()
-    {
-        if (player == null)
+        // Ensure animator is valid
+        if (animator == null)
         {
+            Debug.LogError("Animator component missing from enemy!");
+            enabled = false;
             return;
         }
 
+        // Initialize animation state
+        SetAnimationState(1);
+    }
+
+    void Update()
+    {
+        if (player == null) return;
+
         float distanceToPlayer = Vector3.Distance(transform.position, player.position);
         UpdateMovementBehavior(distanceToPlayer);
-        
+
         if (CanAttack(distanceToPlayer))
         {
             StartCoroutine(PerformAttack());
@@ -57,33 +64,58 @@ public class enemyController : MonoBehaviour
 
     void UpdateMovementBehavior(float distanceToPlayer)
     {
-        // Don't move if attacking
         if (isAttacking)
         {
             agent.isStopped = true;
+            SetAnimationState(0); // Set to idle during attack
             return;
         }
 
         agent.isStopped = false;
-        // Set destination to player's position
         agent.SetDestination(player.position);
-        // Adjust speed based on distance to player
-        if (distanceToPlayer > runThreshold)
+
+        // Update movement animation based on agent's actual velocity
+        float currentSpeed = agent.velocity.magnitude;
+        animator.SetFloat(ANIM_SPEED, currentSpeed);
+
+        // Check if player is within detection range
+        if (distanceToPlayer <= detectionRange)
+        {
+            hasDetectedPlayer = true;
+        }
+
+        // Update movement state and speed
+        if (hasDetectedPlayer)
         {
             agent.speed = runSpeed;
-            if (animator != null) animator.SetBool("isRunning", true);
+            SetAnimationState(2); // Run
         }
         else
         {
             agent.speed = walkSpeed;
-            if (animator != null) animator.SetBool("isRunning", false);
+            SetAnimationState(1); // Walk
+        }
+
+        // Ensure the enemy is facing the player
+        if (agent.velocity.magnitude > 0.1f)
+        {
+            transform.rotation = Quaternion.LookRotation(agent.velocity.normalized);
+        }
+    }
+
+    void SetAnimationState(int state)
+    {
+        // state: 0 = idle, 1 = walk, 2 = run
+        if (animator != null)
+        {
+            animator.SetBool(ANIM_IS_WALKING, state == 1);
+            animator.SetBool(ANIM_IS_RUNNING, state == 2);
         }
     }
 
     bool CanAttack(float distanceToPlayer)
     {
-        return !isAttacking && distanceToPlayer 
-            <= attackRange && Time.time >= nextAttackTime;
+        return !isAttacking && distanceToPlayer <= attackRange && Time.time >= nextAttackTime;
     }
 
     IEnumerator PerformAttack()
@@ -91,38 +123,37 @@ public class enemyController : MonoBehaviour
         isAttacking = true;
         nextAttackTime = Time.time + attackCooldown;
 
-        // Play attack animation
-        if (animator != null)
-        {
-            animator.SetTrigger("Attack");
-        }
+        // Ensure we're facing the player before attacking
+        Vector3 directionToPlayer = (player.position - transform.position).normalized;
+        transform.rotation = Quaternion.LookRotation(directionToPlayer);
 
+        // Trigger attack animation
+        animator.SetTrigger(ANIM_ATTACK);
+
+        // Wait for the animation to reach the impact point
         yield return new WaitForSeconds(attackAnimationDuration * 0.5f);
 
-        /*
-        // Deal damage if still in range
+        // Deal damage if player is still in range
         if (Vector3.Distance(transform.position, player.position) <= attackRange)
         {
-            PlayerHealth playerHealth = player.GetComponent<PlayerHealth>();
+            playerController playerHealth = player.GetComponent<playerController>();
             if (playerHealth != null)
             {
-                playerHealth.TakeDamage(meleeDamage);
+                playerHealth.takeDamage(meleeDamage);
             }
         }
-        */
 
         // Wait for the rest of the animation
         yield return new WaitForSeconds(attackAnimationDuration * 0.5f);
         isAttacking = false;
     }
 
-    private void OnDrawGizmosSelected()
+    void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(transform.position, attackRange);
 
         Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(transform.position, runThreshold);
+        Gizmos.DrawWireSphere(transform.position, detectionRange);
     }
 }
-

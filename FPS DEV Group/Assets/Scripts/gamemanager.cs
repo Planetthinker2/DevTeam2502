@@ -20,21 +20,37 @@ public class gamemanager : MonoBehaviour
 
     int goalCount;
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    // Awake begins before start
     void Awake()
     {
         instance = this;
         player = GameObject.FindWithTag("Player");
         playerScript = player.GetComponent<playerController>();
+
+        // Initialize game state
+        isPaused = false;
+        menuActive = null;
+
+        // Set initial cursor state
+        Cursor.visible = false;
+        Cursor.lockState = CursorLockMode.Locked;
+
+        // Ensure time scale is set to 1
+        Time.timeScale = 1;
     }
 
-    // Update is called once per frame
+    void Start()
+    {
+        // Ensure all menu panels are initially disabled
+        if (menuPause) menuPause.SetActive(false);
+        if (menuWin) menuWin.SetActive(false);
+        if (menuLose) menuLose.SetActive(false);
+    }
+
     void Update()
     {
         if (Input.GetButtonDown("Cancel")) // Escape key
         {
-            if (menuActive == null)
+            if (!isPaused)
             {
                 statePause();
                 menuActive = menuPause;
@@ -49,22 +65,26 @@ public class gamemanager : MonoBehaviour
 
     public void statePause()
     {
-        isPaused = !isPaused;
-        Time.timeScale = 0; // Pause the game
+        isPaused = true;
+        Time.timeScale = 0;
         Cursor.visible = true;
         Cursor.lockState = CursorLockMode.Confined;
     }
 
     public void stateUnpause()
     {
-        isPaused = !isPaused;
-        Time.timeScale = 1; // Unpause the game
+        isPaused = false;
+        Time.timeScale = 1;
         Cursor.visible = false;
         Cursor.lockState = CursorLockMode.Locked;
-        menuActive.SetActive(false);
-        menuActive = null;
+        if (menuActive != null)
+        {
+            menuActive.SetActive(false);
+            menuActive = null;
+        }
     }
 
+    // Rest of your existing methods remain the same
     public void updateGameGoal(int amount)
     {
         goalCount += amount;
@@ -84,4 +104,3 @@ public class gamemanager : MonoBehaviour
         menuActive.SetActive(true);
     }
 }
-
