@@ -1,6 +1,7 @@
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 public class gamemanager : MonoBehaviour
 {
@@ -10,7 +11,7 @@ public class gamemanager : MonoBehaviour
     [SerializeField] GameObject menuPause;
     [SerializeField] GameObject menuWin;
     [SerializeField] GameObject menuLose;
-    [SerializeField] Text goalCountText;
+    [SerializeField] TextMeshProUGUI enemyCountText;
 
     public Image playerHPBar;
     public GameObject playerDamageScreen;
@@ -18,7 +19,7 @@ public class gamemanager : MonoBehaviour
     public GameObject player;
     public playerController playerScript;
 
-    int goalCount;
+    public int totalEnemies;
 
     void Awake()
     {
@@ -28,22 +29,23 @@ public class gamemanager : MonoBehaviour
 
         // Initialize game state
         isPaused = false;
-        menuActive = null;
-
-        // Set initial cursor state
+        Time.timeScale = 1;
         Cursor.visible = false;
         Cursor.lockState = CursorLockMode.Locked;
+        menuActive = null;
 
-        // Ensure time scale is set to 1
-        Time.timeScale = 1;
+        // Initialize enemy count
+        totalEnemies = 0;
+        if (enemyCountText != null)
+        {
+            enemyCountText.text = "0";
+        }
     }
 
     void Start()
     {
-        // Ensure all menu panels are initially disabled
-        if (menuPause) menuPause.SetActive(false);
-        if (menuWin) menuWin.SetActive(false);
-        if (menuLose) menuLose.SetActive(false);
+        // Count initial enemies
+        CountEnemies();
     }
 
     void Update()
@@ -52,9 +54,8 @@ public class gamemanager : MonoBehaviour
         {
             if (!isPaused)
             {
-                statePause();
                 menuActive = menuPause;
-                menuActive.SetActive(true);
+                statePause();
             }
             else if (menuActive == menuPause)
             {
@@ -63,44 +64,61 @@ public class gamemanager : MonoBehaviour
         }
     }
 
+    void CountEnemies()
+    {
+        totalEnemies = GameObject.FindGameObjectsWithTag("Enemy").Length;
+        UpdateEnemyCountUI();
+    }
+
     public void statePause()
     {
         isPaused = true;
         Time.timeScale = 0;
         Cursor.visible = true;
         Cursor.lockState = CursorLockMode.Confined;
+
+        if (menuActive != null)
+        {
+            menuActive.SetActive(true);
+        }
     }
 
     public void stateUnpause()
     {
+        if (menuActive != null)
+        {
+            menuActive.SetActive(false);
+        }
+
         isPaused = false;
         Time.timeScale = 1;
         Cursor.visible = false;
         Cursor.lockState = CursorLockMode.Locked;
-        if (menuActive != null)
+    }
+
+    void UpdateEnemyCountUI()
+    {
+        if (enemyCountText != null)
         {
-            menuActive.SetActive(false);
-            menuActive = null;
+            enemyCountText.text = totalEnemies.ToString();
         }
     }
 
-    // Rest of your existing methods remain the same
     public void updateGameGoal(int amount)
     {
-        goalCount += amount;
-        goalCountText.text = goalCount.ToString("F0");
-        if (goalCount <= 0)
+        totalEnemies += amount;
+        UpdateEnemyCountUI();
+
+        if (totalEnemies <= 0)
         {
-            statePause();
             menuActive = menuWin;
-            menuActive.SetActive(true);
+            statePause();
         }
     }
 
     public void youLose()
     {
-        statePause();
         menuActive = menuLose;
-        menuActive.SetActive(true);
+        statePause();
     }
 }

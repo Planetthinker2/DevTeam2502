@@ -17,8 +17,6 @@ public class playerController : MonoBehaviour, IDamage
     [SerializeField] int sprintMod;
     [SerializeField] int jumpSpeed;
     [SerializeField] int jumpMax;
-
-    [Header("----- Other Player Stats -----")]
     [SerializeField] int gravity;
     [SerializeField] int shootDamage;
     [SerializeField] float shootRate;
@@ -32,10 +30,14 @@ public class playerController : MonoBehaviour, IDamage
     int HPOrig;
 
     float shootTimer;
-    
+
     Vector3 moveDir;
     Vector3 playerVel;
+
+
+    bool isShooting;
     bool isSprinting;
+
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -50,6 +52,10 @@ public class playerController : MonoBehaviour, IDamage
         Debug.DrawRay(Camera.main.transform.position, Camera.main.transform.forward * shootDist, Color.red);
         movement();
         sprint();
+
+        shootTimer += Time.deltaTime;
+
+   
     }
 
     void movement()
@@ -73,9 +79,9 @@ public class playerController : MonoBehaviour, IDamage
 
         shootTimer += Time.deltaTime;
 
-        if(Input.GetButton("Fire1") && shootTimer >= shootRate)
+        if(Input.GetButton("Fire1") && shootTimer >= shootRate && !isShooting)
         {
-            shoot();
+            StartCoroutine(shoot());
         }
 
     } 
@@ -102,16 +108,28 @@ public class playerController : MonoBehaviour, IDamage
         }
     }
 
-    void shoot()
+    IEnumerator shoot()
     {
+
+        isShooting = true;
         shootTimer = 0;
+
         RaycastHit hit;
         if (Physics.Raycast(Camera.main.transform.position, Camera.main.transform.forward, out hit, shootDist, ~ignoreLayer))
         {
             Debug.Log(hit.collider.name);
+
+            IDamage dmg = hit.collider.GetComponent<IDamage>();
+            if (dmg != null)
+            {
+                dmg.takeDamage(shootDamage);
+            }
         }
+        yield return new WaitForSeconds(shootRate);
+        isShooting = false;
     }
 
+    /*
     void meleeAttack()
     {
         RaycastHit hit;
@@ -125,6 +143,7 @@ public class playerController : MonoBehaviour, IDamage
             }
         }
     }
+    
 
     public void getMeleeStats(meleeStats melee)
     {
@@ -135,6 +154,7 @@ public class playerController : MonoBehaviour, IDamage
         meleeDamage = melee.damage;
         meleeRange = (int)melee.attackRate;
     }
+    */
 
     public void takeDamage(int amount)
     {

@@ -2,25 +2,35 @@ using UnityEngine;
 using System.Collections;
 using UnityEngine.AI;
 
-public class enemyController : MonoBehaviour
+public class enemyController : MonoBehaviour, IDamage
 {
-    [Header("----- Enemy Movement Settings -----")]
+    [Header("----- Enemy Settings -----")]
+    [SerializeField] Renderer modelRenderer;
+    [SerializeField] Material materialInstance;
+    [SerializeField] Transform player;
+    [SerializeField] NavMeshAgent agent;
+    [SerializeField] Animator animator;
+    [SerializeField] int HP;
     [SerializeField] float walkSpeed = 2f;
     [SerializeField] float runSpeed = 5f;
     [SerializeField] float detectionRange = 10f;
-    [SerializeField] float attackRange = 2f;
+   
 
     [Header("----- Combat Settings -----")]
     [SerializeField] int meleeDamage = 20;
+    [SerializeField] float attackRange = 2f;
     [SerializeField] float attackCooldown = 1.5f;
     [SerializeField] float attackAnimationDuration = 0.5f;
 
-    private Transform player;
-    private NavMeshAgent agent;
-    private float nextAttackTime;
-    private bool isAttacking;
-    private Animator animator;
-    private bool hasDetectedPlayer = false;
+
+    bool hasDetectedPlayer = false;
+    float nextAttackTime;
+    bool isAttacking;
+
+    Color colorOrig;
+
+    Coroutine co;
+    
 
     // Animation parameter names
     private readonly string ANIM_IS_WALKING = "isWalking";
@@ -33,20 +43,23 @@ public class enemyController : MonoBehaviour
         agent = GetComponent<NavMeshAgent>();
         animator = GetComponent<Animator>();
         player = GameObject.FindGameObjectWithTag("Player").transform;
+        gameObject.tag = "Enemy";
 
         agent.stoppingDistance = attackRange;
         agent.speed = walkSpeed;
 
-        // Ensure animator is valid
-        if (animator == null)
-        {
-            Debug.LogError("Animator component missing from enemy!");
-            enabled = false;
-            return;
-        }
-
         // Initialize animation state
         SetAnimationState(1);
+
+        materialInstance = new Material(modelRenderer.material);
+        modelRenderer.material = materialInstance;
+        colorOrig = materialInstance.color;
+
+       if(gamemanager.instance != null)
+       {
+            gamemanager.instance.updateGameGoal(1);
+       }
+
     }
 
     void Update()
@@ -113,6 +126,39 @@ public class enemyController : MonoBehaviour
         }
     }
 
+    IEnumerator flashRed()
+    {
+        modelRenderer.sharedMaterial.color = Color.red;
+        yield return new WaitForSeconds(0.1f);
+        modelRenderer.sharedMaterial.color = colorOrig;
+
+    }
+
+    public void takeDamage(int amount)
+    {
+        HP -= amount;
+
+        //if(player != null)
+        //{
+        //    agent.SetDestination(player.position);
+        //}
+        
+        if(co != null)
+        {
+            StopCoroutine(co);
+        }
+
+        co = StartCoroutine(flashRed());
+
+        if (HP <= 0)
+        {
+                gamemanager.instance.updateGameGoal(-1);
+                Destroy(gameObject);
+            
+            
+        }
+    }
+
     bool CanAttack(float distanceToPlayer)
     {
         return !isAttacking && distanceToPlayer <= attackRange && Time.time >= nextAttackTime;
@@ -156,4 +202,6 @@ public class enemyController : MonoBehaviour
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(transform.position, detectionRange);
     }
+
+ 
 }
