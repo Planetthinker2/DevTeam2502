@@ -43,7 +43,7 @@ public class playerController : MonoBehaviour, IDamage
     void Start()
     {
         HPOrig = HP;
-        updatePlayerUI();
+        spawnPlayer();
     }
 
     // Update is called once per frame
@@ -180,5 +180,14 @@ public class playerController : MonoBehaviour, IDamage
     void updatePlayerUI()
     {
         gamemanager.instance.playerHPBar.fillAmount = (float)HP / HPOrig;
+    }
+
+    public void spawnPlayer()
+    {
+        HP = HPOrig;
+        updatePlayerUI();
+        controller.enabled = false;
+        controller.transform.position = gamemanager.instance.playerSpawnPos.transform.position;
+        controller.enabled = true;
     }
 }

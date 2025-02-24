@@ -14,6 +14,7 @@ public class enemyController : MonoBehaviour, IDamage
     [SerializeField] float walkSpeed = 2f;
     [SerializeField] float runSpeed = 5f;
     [SerializeField] float detectionRange = 10f;
+  
    
 
     [Header("----- Combat Settings -----")]
@@ -26,6 +27,10 @@ public class enemyController : MonoBehaviour, IDamage
     bool hasDetectedPlayer = false;
     float nextAttackTime;
     bool isAttacking;
+
+    
+
+    Vector3 startingPos;
 
     Color colorOrig;
 
@@ -60,6 +65,8 @@ public class enemyController : MonoBehaviour, IDamage
             gamemanager.instance.updateGameGoal(1);
        }
 
+       startingPos = transform.position;
+
     }
 
     void Update()
@@ -69,11 +76,19 @@ public class enemyController : MonoBehaviour, IDamage
         float distanceToPlayer = Vector3.Distance(transform.position, player.position);
         UpdateMovementBehavior(distanceToPlayer);
 
+        
+
+        
+
         if (CanAttack(distanceToPlayer))
         {
             StartCoroutine(PerformAttack());
         }
+
+        
     }
+
+    
 
     void UpdateMovementBehavior(float distanceToPlayer)
     {

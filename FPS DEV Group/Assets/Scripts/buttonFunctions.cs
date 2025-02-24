@@ -22,4 +22,10 @@ public class buttonFunctions : MonoBehaviour
 Application.Quit();
 #endif
     }
+
+    public void respawnPlayer()
+    {
+        gamemanager.instance.playerScript.spawnPlayer();
+        gamemanager.instance.stateUnpause();
+    }
 }

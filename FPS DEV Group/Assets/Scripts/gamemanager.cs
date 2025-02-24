@@ -18,6 +18,7 @@ public class gamemanager : MonoBehaviour
     public bool isPaused;
     public GameObject player;
     public playerController playerScript;
+    public GameObject playerSpawnPos;
 
     public int totalEnemies;
 
@@ -26,6 +27,7 @@ public class gamemanager : MonoBehaviour
         instance = this;
         player = GameObject.FindWithTag("Player");
         playerScript = player.GetComponent<playerController>();
+        playerSpawnPos = GameObject.FindWithTag("Player Spawn Pos");
 
         // Initialize game state
         isPaused = false;
