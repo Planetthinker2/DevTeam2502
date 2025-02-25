@@ -3,7 +3,7 @@ using UnityEngine;
 public class damage : MonoBehaviour
 {
 
-    enum damageType { moving, stationary }
+    enum damageType { moving, stationary, depleting }
     [SerializeField] damageType type;
     [SerializeField] Rigidbody rb;
 
@@ -17,6 +17,11 @@ public class damage : MonoBehaviour
         {
             rb.linearVelocity = (gamemanager.instance.player.transform.position - transform.position).normalized * speed; // Shoot in direciton of player
 
+            Destroy(gameObject, destroyTime);
+        }
+
+        if(type == damageType.depleting)
+        {
             Destroy(gameObject, destroyTime);
         }
     }

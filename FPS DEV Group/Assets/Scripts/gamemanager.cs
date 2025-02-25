@@ -18,6 +18,7 @@ public class gamemanager : MonoBehaviour
 
     public Image playerHPBar;
     public GameObject playerDamageScreen;
+    public GameObject playerRestoreScreen;
     public bool isPaused;
     public GameObject player;
     public playerController playerScript;

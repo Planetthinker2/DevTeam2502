@@ -14,6 +14,7 @@ public class enemyController : MonoBehaviour, IDamage
     [SerializeField] float walkSpeed = 2f;
     [SerializeField] float runSpeed = 5f;
     [SerializeField] float detectionRange = 10f;
+    [SerializeField] GameObject loot;
    
 
     [Header("----- Combat Settings -----")]
