@@ -42,6 +42,7 @@ public class enemyController : MonoBehaviour, IDamage
     {
         agent = GetComponent<NavMeshAgent>();
         animator = GetComponent<Animator>();
+
         player = GameObject.FindGameObjectWithTag("Player").transform;
         gameObject.tag = "Enemy";
 
@@ -137,25 +138,22 @@ public class enemyController : MonoBehaviour, IDamage
     public void takeDamage(int amount)
     {
         HP -= amount;
-
-        //if(player != null)
+                
+        //if(co != null)
         //{
-        //    agent.SetDestination(player.position);
+        //    StopCoroutine(co);
         //}
-        
-        if(co != null)
-        {
-            StopCoroutine(co);
-        }
 
-        co = StartCoroutine(flashRed());
+        //co = StartCoroutine(flashRed());
 
         if (HP <= 0)
         {
+
+            if (gamemanager.instance != null)
+            {
                 gamemanager.instance.updateGameGoal(-1);
+            }
                 Destroy(gameObject);
-            
-            
         }
     }
 

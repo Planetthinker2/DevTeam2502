@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 
 
-public class playerController : MonoBehaviour, IDamage
+public class playerController : MonoBehaviour, IDamage, IPickup
 {
 
     [Header("----- Player Controller -----")]
@@ -18,6 +18,9 @@ public class playerController : MonoBehaviour, IDamage
     [SerializeField] int jumpSpeed;
     [SerializeField] int jumpMax;
     [SerializeField] int gravity;
+
+    [SerializeField] List<gunStats> gunList = new List<gunStats>();
+    [SerializeField] GameObject gunModel;
     [SerializeField] int shootDamage;
     [SerializeField] float shootRate;
     [SerializeField] int shootDist;
@@ -28,7 +31,7 @@ public class playerController : MonoBehaviour, IDamage
 
     int jumpCount;
     int HPOrig;
-
+    int gunListPos;
     float shootTimer;
 
     Vector3 moveDir;
@@ -53,7 +56,7 @@ public class playerController : MonoBehaviour, IDamage
         movement();
         sprint();
 
-        shootTimer += Time.deltaTime;
+        //shootTimer += Time.deltaTime;
 
    
     }
@@ -83,6 +86,8 @@ public class playerController : MonoBehaviour, IDamage
         {
             StartCoroutine(shoot());
         }
+
+        selectGun();
 
     } 
 
@@ -172,13 +177,59 @@ public class playerController : MonoBehaviour, IDamage
 
     IEnumerator flashDamageScreen()
     {
-        gamemanager.instance.playerDamageScreen.SetActive(true);
-        yield return new WaitForSeconds(0.1f);
-        gamemanager.instance.playerDamageScreen.SetActive(false);
+        if (gamemanager.instance != null && gamemanager.instance.playerDamageScreen != null)
+        {
+            gamemanager.instance.playerDamageScreen.SetActive(true);
+            yield return new WaitForSeconds(0.1f);
+            if (gamemanager.instance != null && gamemanager.instance.playerDamageScreen != null)
+            {
+                gamemanager.instance.playerDamageScreen.SetActive(false);
+            }
+        }
+        else { yield return null; }
     }
+
 
     void updatePlayerUI()
     {
-        gamemanager.instance.playerHPBar.fillAmount = (float)HP / HPOrig;
+        if (gamemanager.instance != null && gamemanager.instance.playerHPBar != null)
+        {
+            gamemanager.instance.playerHPBar.fillAmount = (float)HP / HPOrig;
+        }
+    }
+
+    public void getGunStats(gunStats gun)
+    {
+
+        gunList.Add(gun);
+        gunListPos = gunList.Count - 1;
+        changeGun();
+       
+    }
+
+    void selectGun()
+    {
+        if(Input.GetAxis("Mouse ScrollWheel") > 0 && gunListPos < gunList.Count -1)
+        {
+            gunListPos++;
+            changeGun();
+
+
+        }
+        else if (Input.GetAxis("Mouse ScrollWheel") < 0 && gunListPos > 0)
+        {
+            gunListPos--;
+            changeGun();
+        }
+    }
+
+    void changeGun()
+    {
+        shootDamage = gunList[gunListPos].shootDamage;
+        shootRate = gunList[gunListPos].shootRate;
+        shootDist = gunList[gunListPos].shootDist;
+
+        gunModel.GetComponent<MeshFilter>().sharedMesh = gunList[gunListPos].model.GetComponent<MeshFilter>().sharedMesh;
+        gunModel.GetComponent<MeshRenderer>().sharedMaterial = gunList[gunListPos].model.GetComponent<MeshRenderer>().sharedMaterial;
     }
 }

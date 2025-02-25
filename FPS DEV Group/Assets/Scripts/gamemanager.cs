@@ -26,36 +26,19 @@ public class gamemanager : MonoBehaviour
         instance = this;
         player = GameObject.FindWithTag("Player");
         playerScript = player.GetComponent<playerController>();
-
-        // Initialize game state
-        isPaused = false;
-        Time.timeScale = 1;
-        Cursor.visible = false;
-        Cursor.lockState = CursorLockMode.Locked;
-        menuActive = null;
-
-        // Initialize enemy count
-        totalEnemies = 0;
-        if (enemyCountText != null)
-        {
-            enemyCountText.text = "0";
-        }
     }
 
-    void Start()
-    {
-        // Count initial enemies
-        CountEnemies();
-    }
+   
 
     void Update()
     {
         if (Input.GetButtonDown("Cancel")) // Escape key
         {
-            if (!isPaused)
+            if (menuActive == null)
             {
-                menuActive = menuPause;
                 statePause();
+                menuActive = menuPause;
+                menuActive.SetActive(true);
             }
             else if (menuActive == menuPause)
             {
@@ -64,61 +47,45 @@ public class gamemanager : MonoBehaviour
         }
     }
 
-    void CountEnemies()
-    {
-        totalEnemies = GameObject.FindGameObjectsWithTag("Enemy").Length;
-        UpdateEnemyCountUI();
-    }
 
     public void statePause()
     {
-        isPaused = true;
+        isPaused = !isPaused;
         Time.timeScale = 0;
         Cursor.visible = true;
         Cursor.lockState = CursorLockMode.Confined;
-
-        if (menuActive != null)
-        {
-            menuActive.SetActive(true);
-        }
     }
 
     public void stateUnpause()
     {
-        if (menuActive != null)
-        {
-            menuActive.SetActive(false);
-        }
 
-        isPaused = false;
+        isPaused = !isPaused;
         Time.timeScale = 1;
         Cursor.visible = false;
         Cursor.lockState = CursorLockMode.Locked;
+        menuActive.SetActive(false);
+        menuActive = null;
     }
 
-    void UpdateEnemyCountUI()
-    {
-        if (enemyCountText != null)
-        {
-            enemyCountText.text = totalEnemies.ToString();
-        }
-    }
 
     public void updateGameGoal(int amount)
     {
         totalEnemies += amount;
-        UpdateEnemyCountUI();
+        enemyCountText.text = totalEnemies.ToString("F0");
+        //UpdateEnemyCountUI();
 
         if (totalEnemies <= 0)
         {
-            menuActive = menuWin;
             statePause();
+            menuActive = menuWin;
+            menuActive.SetActive(true);
         }
     }
 
     public void youLose()
     {
-        menuActive = menuLose;
         statePause();
+        menuActive = menuLose;     
+        menuActive.SetActive(true);
     }
 }
