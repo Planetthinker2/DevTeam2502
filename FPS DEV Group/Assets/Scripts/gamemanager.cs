@@ -11,7 +11,10 @@ public class gamemanager : MonoBehaviour
     [SerializeField] GameObject menuPause;
     [SerializeField] GameObject menuWin;
     [SerializeField] GameObject menuLose;
+    [SerializeField] GameObject ammoDisplay;
     [SerializeField] TextMeshProUGUI enemyCountText;
+    [SerializeField] TMP_Text ammoText;
+
 
     public Image playerHPBar;
     public GameObject playerDamageScreen;
@@ -87,5 +90,12 @@ public class gamemanager : MonoBehaviour
         statePause();
         menuActive = menuLose;     
         menuActive.SetActive(true);
+    }
+    public void updateAmmoUI(int current, int max)
+    {
+        ammoText.text = "Ammo ";
+        ammoText.text += current.ToString("F0");
+        ammoText.text += " / ";
+        ammoText.text += max.ToString("F0");
     }
 }
