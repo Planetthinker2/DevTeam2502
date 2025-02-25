@@ -82,13 +82,17 @@ public class playerController : MonoBehaviour, IDamage, IPickup
 
         shootTimer += Time.deltaTime;
 
-        if(Input.GetButton("Fire1") && shootTimer >= shootRate && !isShooting)
+        if(Input.GetButton("Fire1") && gunList.Count > 0 && gunList[gunListPos].ammoCur > 0 && shootTimer >= shootRate && !isShooting)
         {
             StartCoroutine(shoot());
+            gunList[gunListPos].ammoCur--;
+            updateAmmoUI();
         }
-
+        if (Input.GetButton("Reload"))
+        {
+            gunReload();
+        }
         selectGun();
-
     } 
 
     void sprint()
@@ -197,6 +201,10 @@ public class playerController : MonoBehaviour, IDamage, IPickup
             gamemanager.instance.playerHPBar.fillAmount = (float)HP / HPOrig;
         }
     }
+    void updateAmmoUI()
+    {
+        gamemanager.instance.updateAmmoUI(gunList[gunListPos].ammoCur, gunList[gunListPos].ammoMax);
+    }
 
     public void getGunStats(gunStats gun)
     {
@@ -231,5 +239,15 @@ public class playerController : MonoBehaviour, IDamage, IPickup
 
         gunModel.GetComponent<MeshFilter>().sharedMesh = gunList[gunListPos].model.GetComponent<MeshFilter>().sharedMesh;
         gunModel.GetComponent<MeshRenderer>().sharedMaterial = gunList[gunListPos].model.GetComponent<MeshRenderer>().sharedMaterial;
+        updateAmmoUI();
+     }
+
+    void gunReload()
+    {
+        if (Input.GetButtonDown("Reload"))
+        {
+            gunList[gunListPos].ammoCur = gunList[gunListPos].ammoMax;
+        }
+        gamemanager.instance.updateAmmoUI(gunList[gunListPos].ammoCur, gunList[gunListPos].ammoMax);
     }
 }

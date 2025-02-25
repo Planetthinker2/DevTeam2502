@@ -8,7 +8,7 @@ public class pickUp : MonoBehaviour
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        
+        gun.ammoCur = gun.ammoMax;
     }
 
     private void OnTriggerEnter(Collider other)
