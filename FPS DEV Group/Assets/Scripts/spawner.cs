@@ -2,22 +2,17 @@ using MathNet.Numerics.RootFinding;
 using System.Collections;
 using UnityEngine;
 
-public class spawner : MonoBehaviour, IDamage
+public class spawner : MonoBehaviour
 {
     enum spawnerType { required, destroyable}
     [SerializeField] spawnerType type;
-    [SerializeField] Renderer model;
     [SerializeField] GameObject objectToSpawn;
     [SerializeField] int numToSpawn;
     [SerializeField] int timeBetweenSpawns;
     [SerializeField] Transform[] spawnPos;
-    [SerializeField] int HP;
-
-
+   
     float spawnTimer;
     int spawnCount;
-
-    Color colorOrig;
 
     bool startSpawning;
 
@@ -28,7 +23,6 @@ public class spawner : MonoBehaviour, IDamage
         {
             gamemanager.instance.updateGameGoal(numToSpawn);
         }
-        colorOrig = model.material.color;
     }
 
     // Update is called once per frame
@@ -56,32 +50,12 @@ public class spawner : MonoBehaviour, IDamage
     void spawn()
     {
         int arrayPos = Random.Range(0, spawnPos.Length);
-
         Instantiate(objectToSpawn, spawnPos[arrayPos].position, spawnPos[arrayPos].rotation);
+        if (type == spawnerType.destroyable)
+        {
+            gamemanager.instance.updateGameGoal(1);
+        }
         spawnCount++;
         spawnTimer = 0;
     }
-
-    public void takeDamage(int amount)
-    {
-        if(type == spawnerType.required)
-        {
-            return;
-        }
-        HP -= amount;
-        StartCoroutine(flashRed());
-
-        if (HP <= 0)
-        {
-            Destroy(gameObject);
-        }
-    }
-
-    IEnumerator flashRed()
-    {
-        model.material.color = Color.red;
-        yield return new WaitForSeconds(0.1f);
-        model.material.color = colorOrig;
-    }
-
 }

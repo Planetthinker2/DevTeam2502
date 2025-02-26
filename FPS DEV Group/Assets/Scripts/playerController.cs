@@ -258,6 +258,10 @@ public class playerController : MonoBehaviour, IDamage, IPickup
        
         updatePlayerUI();
 
+        if (HP > HPOrig)
+        {
+            HP = HPOrig;
+        }
 
         if (HP <= 0)
         {

@@ -55,10 +55,10 @@ public class enemyController : MonoBehaviour, IDamage
         SetAnimationState(1);
 
 
-       if(gamemanager.instance != null)
+       /*if(gamemanager.instance != null)
        {
             gamemanager.instance.updateGameGoal(1);
-       }
+       }*/
 
     }
 
