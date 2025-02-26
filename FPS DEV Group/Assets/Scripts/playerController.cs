@@ -21,6 +21,7 @@ public class playerController : MonoBehaviour, IDamage, IPickup
 
     [SerializeField] List<gunStats> gunList = new List<gunStats>();
     [SerializeField] GameObject gunModel;
+    [SerializeField] Transform muzzleFlash;
     [SerializeField] int shootDamage;
     [SerializeField] float shootRate;
     [SerializeField] int shootDist;
@@ -123,10 +124,15 @@ public class playerController : MonoBehaviour, IDamage, IPickup
         isShooting = true;
         shootTimer = 0;
 
+        StartCoroutine(flashMuzzle());
+
+
         RaycastHit hit;
         if (Physics.Raycast(Camera.main.transform.position, Camera.main.transform.forward, out hit, shootDist, ~ignoreLayer))
         {
-            Debug.Log(hit.collider.name);
+            //Debug.Log(hit.collider.name);
+
+            Instantiate(gunList[gunListPos].hitEffect, hit.point, Quaternion.identity);
 
             IDamage dmg = hit.collider.GetComponent<IDamage>();
             if (dmg != null)
@@ -271,5 +277,13 @@ public class playerController : MonoBehaviour, IDamage, IPickup
             gunList[gunListPos].ammoCur = gunList[gunListPos].ammoMax;
         }
         gamemanager.instance.updateAmmoUI(gunList[gunListPos].ammoCur, gunList[gunListPos].ammoMax);
+    }
+
+    IEnumerator flashMuzzle()
+    {
+        muzzleFlash.localEulerAngles = new Vector3(0, 0, Random.Range(0, 360));
+        muzzleFlash.gameObject.SetActive(true);
+        yield return new WaitForSeconds(0.05f);
+        muzzleFlash.gameObject.SetActive(false);
     }
 }
