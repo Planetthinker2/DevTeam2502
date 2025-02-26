@@ -174,7 +174,16 @@ public class playerController : MonoBehaviour, IDamage, IPickup
     public void takeDamage(int amount)
     {
         HP -= amount;
-        StartCoroutine(flashDamageScreen());
+
+        if (amount < 0)
+        {
+            StartCoroutine(flashRestoreScreen());
+        }
+        else if (amount > 0)
+        {
+            StartCoroutine(flashDamageScreen());
+        }
+       
         updatePlayerUI();
 
 
@@ -194,6 +203,19 @@ public class playerController : MonoBehaviour, IDamage, IPickup
             if (gamemanager.instance != null && gamemanager.instance.playerDamageScreen != null)
             {
                 gamemanager.instance.playerDamageScreen.SetActive(false);
+            }
+        }
+        else { yield return null; }
+    }
+    IEnumerator flashRestoreScreen()
+    {
+        if (gamemanager.instance != null && gamemanager.instance.playerRestoreScreen != null)
+        {
+            gamemanager.instance.playerRestoreScreen.SetActive(true);
+            yield return new WaitForSeconds(0.1f);
+            if (gamemanager.instance != null && gamemanager.instance.playerRestoreScreen != null)
+            {
+                gamemanager.instance.playerRestoreScreen.SetActive(false);
             }
         }
         else { yield return null; }
