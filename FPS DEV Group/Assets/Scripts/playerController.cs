@@ -26,6 +26,14 @@ public class playerController : MonoBehaviour, IDamage, IPickup
     [SerializeField] float shootRate;
     [SerializeField] int shootDist;
 
+    [Header("----- Player Stamina -----")]
+    [SerializeField] int maxStamina;
+    [SerializeField] float staminaRegenRate = 10f;
+    [SerializeField] float sprintStaminaCost = 15f;
+    [SerializeField] int jumpStaminaCost;
+    [SerializeField] float staminaRegenDelay;
+
+
     [Header("----- Player Melee Stats -----")]
     [SerializeField] int meleeDamage;
     [SerializeField] float meleeRange;
@@ -34,6 +42,8 @@ public class playerController : MonoBehaviour, IDamage, IPickup
     int HPOrig;
     int gunListPos;
     float shootTimer;
+    float currentStamina;
+    float staminaRegenTimer;
 
     Vector3 moveDir;
     Vector3 playerVel;
@@ -41,12 +51,14 @@ public class playerController : MonoBehaviour, IDamage, IPickup
 
     bool isShooting;
     bool isSprinting;
-
+    bool canRegenStamina;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         HPOrig = HP;
+        currentStamina = maxStamina;
+        canRegenStamina = true;
         updatePlayerUI();
     }
 
@@ -59,8 +71,10 @@ public class playerController : MonoBehaviour, IDamage, IPickup
 
         //shootTimer += Time.deltaTime;
 
-   
+        manageStamina();
+
     }
+
 
     void movement()
     {
@@ -94,27 +108,85 @@ public class playerController : MonoBehaviour, IDamage, IPickup
             gunReload();
         }
         selectGun();
-    } 
+    }
+
+    void manageStamina()
+    {
+        // Reduce stamina when player is sprinting
+        if (isSprinting && moveDir.magnitude > 0.1f) // Only deplete when actually moving
+        {
+            // Subtract the cost of sprinting from the current stamina (per second)
+            currentStamina -= sprintStaminaCost * Time.deltaTime;
+            canRegenStamina = false;
+            staminaRegenTimer = 0;
+
+            // If out of stamina, stop sprinting
+            if (currentStamina <= 0)
+            {
+                currentStamina = 0;
+                speed /= sprintMod;
+                isSprinting = false;
+            }
+        }
+        else
+        {
+            // Only regenerate after a delay
+            if (!canRegenStamina)
+            {
+                staminaRegenTimer += Time.deltaTime;
+                if (staminaRegenTimer >= staminaRegenDelay)
+                {
+                    canRegenStamina = true;
+                }
+            }
+
+            // Regenerate stamina
+            if (canRegenStamina && currentStamina < maxStamina)
+            {
+                currentStamina += staminaRegenRate * Time.deltaTime;
+
+                if (currentStamina > maxStamina)
+                {
+                    currentStamina = maxStamina;
+                }
+            }
+        }
+
+        updatePlayerUI();
+    }
 
     void sprint()
     {
-        if(Input.GetButtonDown("Sprint")) 
+        if (Input.GetButtonDown("Sprint") && currentStamina > 0 && !isSprinting && moveDir.magnitude > 0.1f)
         {
             speed *= sprintMod;
+            isSprinting = true;
         }
-        else if (Input.GetButtonUp("Sprint"))
+        else if ((Input.GetButtonUp("Sprint") || currentStamina <= 0 || moveDir.magnitude < 0.1f) && isSprinting)
         {
             speed /= sprintMod;
+            isSprinting = false;
+            staminaRegenTimer = 0;
         }
     }
 
     void jump()
     {
-        if (Input.GetButtonDown("Jump") && jumpCount < jumpMax)
+        if (Input.GetButtonDown("Jump") && jumpCount < jumpMax && currentStamina >= jumpStaminaCost)
         {
+            // Increment jump count
             jumpCount++;
-            playerVel.y = jumpSpeed * Time.deltaTime;
 
+            // Apply jump force
+            playerVel.y = jumpSpeed;
+
+            // Subtract the cost of jumping from the current stamina
+            currentStamina -= jumpStaminaCost;
+            canRegenStamina = false;
+            staminaRegenTimer = 0;
+
+            // Update UI after stamina change
+            updatePlayerUI();
         }
     }
 
@@ -224,14 +296,23 @@ public class playerController : MonoBehaviour, IDamage, IPickup
 
     void updatePlayerUI()
     {
-        if (gamemanager.instance != null && gamemanager.instance.playerHPBar != null)
+        if (gamemanager.instance != null)
         {
-            gamemanager.instance.playerHPBar.fillAmount = (float)HP / HPOrig;
+            if (gamemanager.instance.playerHPBar != null)
+            {
+                gamemanager.instance.playerHPBar.fillAmount = (float)HP / HPOrig;
+            }
+
+            if (gamemanager.instance.playerStaminaBar != null)
+            {
+                gamemanager.instance.playerStaminaBar.fillAmount = currentStamina / maxStamina;
+            }
         }
     }
     void updateAmmoUI()
     {
         gamemanager.instance.updateAmmoUI(gunList[gunListPos].ammoCur, gunList[gunListPos].ammoMax);
+
     }
 
     public void getGunStats(gunStats gun)

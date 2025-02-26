@@ -17,6 +17,7 @@ public class gamemanager : MonoBehaviour
 
 
     public Image playerHPBar;
+    public Image playerStaminaBar;
     public GameObject playerDamageScreen;
     public GameObject playerRestoreScreen;
     public bool isPaused;
@@ -30,6 +31,8 @@ public class gamemanager : MonoBehaviour
         instance = this;
         player = GameObject.FindWithTag("Player");
         playerScript = player.GetComponent<playerController>();
+
+        menuActive = null;
     }
 
    
