@@ -5,8 +5,7 @@ using UnityEngine.AI;
 public class enemyController : MonoBehaviour, IDamage
 {
     [Header("----- Enemy Settings -----")]
-    [SerializeField] Renderer modelRenderer;
-    [SerializeField] Material materialInstance;
+    [SerializeField] Renderer model;
     [SerializeField] Transform player;
     [SerializeField] NavMeshAgent agent;
     [SerializeField] Animator animator;
@@ -41,6 +40,8 @@ public class enemyController : MonoBehaviour, IDamage
 
     void Start()
     {
+        colorOrig = model.material.color;
+
         agent = GetComponent<NavMeshAgent>();
         animator = GetComponent<Animator>();
 
@@ -53,9 +54,6 @@ public class enemyController : MonoBehaviour, IDamage
         // Initialize animation state
         SetAnimationState(1);
 
-        materialInstance = new Material(modelRenderer.material);
-        modelRenderer.material = materialInstance;
-        colorOrig = materialInstance.color;
 
        if(gamemanager.instance != null)
        {
@@ -130,9 +128,9 @@ public class enemyController : MonoBehaviour, IDamage
 
     IEnumerator flashRed()
     {
-        modelRenderer.sharedMaterial.color = Color.red;
+        model.material.color = Color.red;
         yield return new WaitForSeconds(0.1f);
-        modelRenderer.sharedMaterial.color = colorOrig;
+        model.material.color = colorOrig;
 
     }
 
