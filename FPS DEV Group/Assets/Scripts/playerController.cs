@@ -19,6 +19,16 @@ public class playerController : MonoBehaviour, IDamage, IPickup
     [SerializeField] int jumpMax;
     [SerializeField] int gravity;
 
+    [Header("----- Player Stamina -----")]
+    [SerializeField] int maxStamina;
+    [SerializeField] float currentStamina;
+    [SerializeField] float staminaRegenRate = 10f;
+    [SerializeField] float sprintStaminaCost = 15f;
+    [SerializeField] int jumpStaminaCost;
+    [SerializeField] float staminaRegenDelay;
+
+
+    [Header("----- Player Gun Stats -----")]
     [SerializeField] List<gunStats> gunList = new List<gunStats>();
     [SerializeField] GameObject gunModel;
     [SerializeField] int shootDamage;
@@ -29,10 +39,13 @@ public class playerController : MonoBehaviour, IDamage, IPickup
     [SerializeField] int meleeDamage;
     [SerializeField] float meleeRange;
 
+
     int jumpCount;
     int HPOrig;
     int gunListPos;
     float shootTimer;
+    float staminaRegenTimer;
+
 
     Vector3 moveDir;
     Vector3 playerVel;
@@ -40,19 +53,23 @@ public class playerController : MonoBehaviour, IDamage, IPickup
 
     bool isShooting;
     bool isSprinting;
+    bool canRegenStamina;
 
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         HPOrig = HP;
+        currentStamina = maxStamina;
+        canRegenStamina = true;
         updatePlayerUI();
     }
 
     // Update is called once per frame
     void Update()
     {
-        Debug.DrawRay(Camera.main.transform.position, Camera.main.transform.forward * shootDist, Color.red);
+
+        Debug.DrawRay(Camera.main.transform.position, Camera.main.transform.forward * shootDist, Color.red, 1.0f);
         movement();
         sprint();
 
@@ -66,19 +83,22 @@ public class playerController : MonoBehaviour, IDamage, IPickup
         if (controller.isGrounded)
         {
             jumpCount = 0;
-            playerVel =Vector3.zero;
+            playerVel = Vector3.zero;
         }
         //moveDir = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
         //transform.position += moveDir * speed * Time.deltaTime; 
 
         moveDir = (Input.GetAxis("Horizontal") * transform.right) + 
                   (Input.GetAxis("Vertical") * transform.forward);
+        
         controller.Move(moveDir * speed * Time.deltaTime);
 
         jump();
 
-        controller.Move(playerVel * speed * Time.deltaTime);
+        //controller.Move(playerVel * speed * Time.deltaTime);
         playerVel.y -= gravity * Time.deltaTime;
+
+
 
         shootTimer += Time.deltaTime;
 
@@ -88,27 +108,78 @@ public class playerController : MonoBehaviour, IDamage, IPickup
         }
 
         selectGun();
+        manageStamina();
 
     } 
 
+    void manageStamina()
+    {
+        // When sprinting, reduce stamina
+        if (isSprinting && moveDir.magnitude > 0.1f) // Only deplete when actually moving
+        {
+            // Calculate without casting to int
+            currentStamina -= sprintStaminaCost * Time.deltaTime;
+            canRegenStamina = false;
+            staminaRegenTimer = 0;
+
+            if (currentStamina <= 0)
+            {
+                currentStamina = 0;
+                speed /= sprintMod;
+                isSprinting = false;
+            }
+        }
+        else
+        {
+            if (!canRegenStamina)
+            {
+                staminaRegenTimer += Time.deltaTime;
+                if (staminaRegenTimer >= staminaRegenDelay)
+                {
+                    canRegenStamina = true;
+                }
+            }
+
+            // Regenerate without casting to int
+            if (canRegenStamina && currentStamina < maxStamina)
+            {
+                currentStamina += staminaRegenRate * Time.deltaTime;
+                if (currentStamina > maxStamina)
+                {
+                    currentStamina = maxStamina;
+                }
+            }
+        }
+        updatePlayerUI();
+    }
+
     void sprint()
     {
-        if(Input.GetButtonDown("Sprint")) 
+        if(Input.GetButtonDown("Sprint") && currentStamina > 0 && !isSprinting) 
         {
             speed *= sprintMod;
+            isSprinting = true;
         }
-        else if (Input.GetButtonUp("Sprint"))
+        else if (Input.GetButtonUp("Sprint") && isSprinting)
         {
             speed /= sprintMod;
+            isSprinting = false;
+            staminaRegenTimer = 0;
         }
     }
 
     void jump()
     {
-        if (Input.GetButtonDown("Jump") && jumpCount < jumpMax)
+        if (Input.GetButtonDown("Jump") && jumpCount < jumpMax && currentStamina >= jumpStaminaCost)
         {
             jumpCount++;
-            playerVel.y = jumpSpeed * Time.deltaTime;
+            playerVel.y = jumpSpeed;
+
+            // Subtract the cost of jumping from the current stamina
+            currentStamina -= jumpStaminaCost;
+            canRegenStamina = false;
+            staminaRegenTimer = 0;
+            updatePlayerUI();
 
         }
     }
@@ -118,6 +189,7 @@ public class playerController : MonoBehaviour, IDamage, IPickup
 
         isShooting = true;
         shootTimer = 0;
+
 
         RaycastHit hit;
         if (Physics.Raycast(Camera.main.transform.position, Camera.main.transform.forward, out hit, shootDist, ~ignoreLayer))
@@ -192,9 +264,17 @@ public class playerController : MonoBehaviour, IDamage, IPickup
 
     void updatePlayerUI()
     {
-        if (gamemanager.instance != null && gamemanager.instance.playerHPBar != null)
+        if (gamemanager.instance != null)
         {
-            gamemanager.instance.playerHPBar.fillAmount = (float)HP / HPOrig;
+            if (gamemanager.instance.playerHPBar != null)
+            {
+                gamemanager.instance.playerHPBar.fillAmount = (float)HP / HPOrig;
+            }
+
+            if (gamemanager.instance.playerStaminaBar != null)
+            {
+                gamemanager.instance.playerStaminaBar.fillAmount = currentStamina / maxStamina;
+            }
         }
     }
 

@@ -14,6 +14,7 @@ public class gamemanager : MonoBehaviour
     [SerializeField] TextMeshProUGUI enemyCountText;
 
     public Image playerHPBar;
+    public Image playerStaminaBar;
     public GameObject playerDamageScreen;
     public bool isPaused;
     public GameObject player;

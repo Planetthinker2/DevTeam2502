@@ -5,8 +5,7 @@ using UnityEngine.AI;
 public class enemyController : MonoBehaviour, IDamage
 {
     [Header("----- Enemy Settings -----")]
-    [SerializeField] Renderer modelRenderer;
-    [SerializeField] Material materialInstance;
+    [SerializeField] Renderer model;
     [SerializeField] Transform player;
     [SerializeField] NavMeshAgent agent;
     [SerializeField] Animator animator;
@@ -40,6 +39,8 @@ public class enemyController : MonoBehaviour, IDamage
 
     void Start()
     {
+        colorOrig = model.material.color;
+
         agent = GetComponent<NavMeshAgent>();
         animator = GetComponent<Animator>();
 
@@ -51,10 +52,6 @@ public class enemyController : MonoBehaviour, IDamage
 
         // Initialize animation state
         SetAnimationState(1);
-
-        materialInstance = new Material(modelRenderer.material);
-        modelRenderer.material = materialInstance;
-        colorOrig = materialInstance.color;
 
        if(gamemanager.instance != null)
        {
@@ -127,34 +124,28 @@ public class enemyController : MonoBehaviour, IDamage
         }
     }
 
-    IEnumerator flashRed()
-    {
-        modelRenderer.sharedMaterial.color = Color.red;
-        yield return new WaitForSeconds(0.1f);
-        modelRenderer.sharedMaterial.color = colorOrig;
-
-    }
-
     public void takeDamage(int amount)
     {
         HP -= amount;
-                
-        //if(co != null)
-        //{
-        //    StopCoroutine(co);
-        //}
 
-        //co = StartCoroutine(flashRed());
+        StartCoroutine(flashRed());
 
         if (HP <= 0)
         {
-
             if (gamemanager.instance != null)
             {
                 gamemanager.instance.updateGameGoal(-1);
             }
-                Destroy(gameObject);
+            Destroy(gameObject);
         }
+
+    }
+
+    IEnumerator flashRed()
+    {
+        model.material.color = Color.red;
+        yield return new WaitForSeconds(0.1f);
+        model.material.color = colorOrig;
     }
 
     bool CanAttack(float distanceToPlayer)
