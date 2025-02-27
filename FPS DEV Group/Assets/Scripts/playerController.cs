@@ -2,36 +2,27 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
-
 public class playerController : MonoBehaviour, IDamage, IPickup
 {
-
     [Header("----- Player Controller -----")]
     [Tooltip("The CharacterController component that handles player movement and collision.")]
     [SerializeField] CharacterController controller;
     [SerializeField] LayerMask ignoreLayer;
 
     [Header("----- Main Player Stats -----")]
-    [Range(5, 50)][SerializeField] int HP;
-    [Range(1, 15)][SerializeField] int speed;
-    [Range(1, 10)][SerializeField] int sprintMod;
-    [Range(1, 10)][SerializeField] int jumpSpeed;
-    [Range(1, 10)][SerializeField] int jumpMax;
-    [Range(1, 50)][SerializeField] int gravity;
+    [SerializeField] int HP;
+    [SerializeField] int speed;
+    [SerializeField] int sprintMod;
+    [SerializeField] int jumpSpeed;
+    [SerializeField] int jumpMax;
+    [SerializeField] int gravity;
 
     [SerializeField] List<gunStats> gunList = new List<gunStats>();
     [SerializeField] GameObject gunModel;
     [SerializeField] Transform muzzleFlash;
-    [Range(1, 10)][SerializeField] int shootDamage;
+    [SerializeField] int shootDamage;
     [SerializeField] float shootRate;
-    [Range(1, 100)][SerializeField] int shootDist;
-
-    [Header("----------AUDIO---------")]
-    [SerializeField] AudioSource aud;
-    [SerializeField] AudioClip[] audHurt;
-    [Range(0,1)][SerializeField] float audHurtVol;
-    [SerializeField] AudioClip[] audWalk;
-    [Range(0, 1)][SerializeField] float audWalkVol;
+    [SerializeField] int shootDist;
 
     [Header("----- Player Stamina -----")]
     [SerializeField] int maxStamina;
@@ -40,10 +31,24 @@ public class playerController : MonoBehaviour, IDamage, IPickup
     [SerializeField] int jumpStaminaCost;
     [SerializeField] float staminaRegenDelay;
 
+    [Header("----- Player Melee Stats -----")]
+    [SerializeField] int meleeDamage;
+    [SerializeField] float meleeRange;
 
-    //[Header("----- Player Melee Stats -----")]
-    //[SerializeField] int meleeDamage;
-    //[SerializeField] float meleeRange;
+    [Header("----- Collision Settings -----")]
+    [SerializeField] float collisionPushForce = 2.0f;
+
+    [Header("----- Flashlight Settings -----")]
+    [SerializeField] GameObject flashlightObject;  // Parent object containing light and quad
+    [SerializeField] Light flashlightLight;        // Light component
+    [SerializeField] GameObject flashlightBeam;    // Quad for visual beam effect
+    [SerializeField] float flashlightIntensity = 2.5f;
+    [SerializeField] float flashlightRange = 10f;
+    [SerializeField] float flashlightAngle = 45f;
+    [SerializeField] KeyCode flashlightToggleKey = KeyCode.F;
+    [SerializeField] float flashlightBatteryMax = 100f;
+    [SerializeField] float flashlightBatteryDrain = 5f;  // Per second
+    [SerializeField] float flashlightBatteryRecharge = 7.5f; // Per second
 
     int jumpCount;
     int HPOrig;
@@ -51,14 +56,14 @@ public class playerController : MonoBehaviour, IDamage, IPickup
     float shootTimer;
     float currentStamina;
     float staminaRegenTimer;
+    private bool flashlightActive = false;
+    private float flashlightBattery;
 
     Vector3 moveDir;
     Vector3 playerVel;
 
-
     bool isShooting;
     bool isSprinting;
-    bool isPlayingSteps;
     bool canRegenStamina;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -67,7 +72,15 @@ public class playerController : MonoBehaviour, IDamage, IPickup
         HPOrig = HP;
         currentStamina = maxStamina;
         canRegenStamina = true;
+        flashlightBattery = flashlightBatteryMax;
         updatePlayerUI();
+
+        // Initialize flashlight in on state
+        flashlightActive = true;
+        if (flashlightObject != null)
+        {
+            flashlightObject.SetActive(true);
+        }
     }
 
     // Update is called once per frame
@@ -76,41 +89,11 @@ public class playerController : MonoBehaviour, IDamage, IPickup
         Debug.DrawRay(Camera.main.transform.position, Camera.main.transform.forward * shootDist, Color.red);
         movement();
         sprint();
-
-        //shootTimer += Time.deltaTime;
-
-        manageStamina();
-
-    }
-
-
-    void movement()
-    {
-        if (controller.isGrounded)
-        {
-            if(moveDir.magnitude > 0.03f && !isPlayingSteps)
-            {
-                StartCoroutine(playWalk());
-            }
-
-            jumpCount = 0;
-            playerVel =Vector3.zero;
-        }
-        //moveDir = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
-        //transform.position += moveDir * speed * Time.deltaTime; 
-
-        moveDir = (Input.GetAxis("Horizontal") * transform.right) + 
-                  (Input.GetAxis("Vertical") * transform.forward);
-        controller.Move(moveDir * speed * Time.deltaTime);
-
-        jump();
-
-        controller.Move(playerVel * speed * Time.deltaTime);
-        playerVel.y -= gravity * Time.deltaTime;
-
         shootTimer += Time.deltaTime;
+        manageStamina();
+        manageFlashlight();
 
-        if(Input.GetButton("Fire1") && gunList.Count > 0 && gunList[gunListPos].ammoCur > 0 && shootTimer >= shootRate && !isShooting)
+        if (Input.GetButton("Fire1") && gunList.Count > 0 && gunList[gunListPos].ammoCur > 0 && shootTimer >= shootRate && !isShooting)
         {
             StartCoroutine(shoot());
             gunList[gunListPos].ammoCur--;
@@ -121,6 +104,36 @@ public class playerController : MonoBehaviour, IDamage, IPickup
             gunReload();
         }
         selectGun();
+    }
+
+    void movement()
+    {
+        if (controller.isGrounded)
+        {
+            jumpCount = 0;
+            playerVel.y = 0;
+        }
+
+        moveDir = (Input.GetAxis("Horizontal") * transform.right) +
+                  (Input.GetAxis("Vertical") * transform.forward);
+        controller.Move(moveDir * speed * Time.deltaTime);
+
+        jump();
+
+        controller.Move(playerVel * speed * Time.deltaTime);
+        playerVel.y -= gravity * Time.deltaTime;
+
+        // Add wall collision detection to prevent clipping
+        if (moveDir.magnitude > 0.1f)
+        {
+            RaycastHit hit;
+            if (Physics.Raycast(transform.position, moveDir, out hit, controller.radius + 0.2f))
+            {
+                // Adjust movement to slide along walls
+                Vector3 reflectDir = Vector3.Reflect(moveDir, hit.normal);
+                moveDir = Vector3.Lerp(moveDir, reflectDir.normalized, 0.9f);
+            }
+        }
     }
 
     void manageStamina()
@@ -168,6 +181,37 @@ public class playerController : MonoBehaviour, IDamage, IPickup
         updatePlayerUI();
     }
 
+    void manageFlashlight()
+    {
+        // Toggle flashlight on/off
+        if (Input.GetKeyDown(flashlightToggleKey) && flashlightBattery > 0)
+        {
+            flashlightActive = !flashlightActive;
+            flashlightObject.SetActive(flashlightActive);
+        }
+
+        // Handle battery drain and recharge
+        if (flashlightActive)
+        {
+            flashlightBattery -= flashlightBatteryDrain * Time.deltaTime;
+
+            if (flashlightBattery <= 0)
+            {
+                flashlightBattery = 0;
+                flashlightActive = false;
+                flashlightObject.SetActive(false);
+            }
+        }
+        else
+        {
+            flashlightBattery += flashlightBatteryRecharge * Time.deltaTime;
+            flashlightBattery = Mathf.Min(flashlightBattery, flashlightBatteryMax);
+        }
+
+        // Update UI (you can add a flashlight battery UI element)
+        updatePlayerUI();
+    }
+
     void sprint()
     {
         if (Input.GetButtonDown("Sprint") && currentStamina > 0 && !isSprinting && moveDir.magnitude > 0.1f)
@@ -181,18 +225,6 @@ public class playerController : MonoBehaviour, IDamage, IPickup
             isSprinting = false;
             staminaRegenTimer = 0;
         }
-    }
-    IEnumerator playWalk()
-    {
-        isPlayingSteps = true;
-        aud.PlayOneShot(audWalk[Random.Range(0, audWalk.Length)], audWalkVol);
-
-        if (!isSprinting)
-            yield return new WaitForSeconds(0.5f);
-        else
-            yield return new WaitForSeconds(0.2f);
-
-        isPlayingSteps = false;
     }
 
     void jump()
@@ -217,19 +249,14 @@ public class playerController : MonoBehaviour, IDamage, IPickup
 
     IEnumerator shoot()
     {
-
         isShooting = true;
         shootTimer = 0;
-        aud.PlayOneShot(gunList[gunListPos].shootSound[Random.Range(0, gunList[gunListPos].shootSound.Length)], gunList[gunListPos].shootVol);
 
         StartCoroutine(flashMuzzle());
-
 
         RaycastHit hit;
         if (Physics.Raycast(Camera.main.transform.position, Camera.main.transform.forward, out hit, shootDist, ~ignoreLayer))
         {
-            //Debug.Log(hit.collider.name);
-
             Instantiate(gunList[gunListPos].hitEffect, hit.point, Quaternion.identity);
 
             IDamage dmg = hit.collider.GetComponent<IDamage>();
@@ -241,33 +268,6 @@ public class playerController : MonoBehaviour, IDamage, IPickup
         yield return new WaitForSeconds(shootRate);
         isShooting = false;
     }
-
-    /*
-    void meleeAttack()
-    {
-        RaycastHit hit;
-        if (Physics.Raycast(Camera.main.transform.position, Camera.main.transform.forward, out hit, shootDist, ~ignoreLayer))
-        {
-            Debug.Log(hit.collider.name);
-            IDamage dmg = hit.collider.GetComponent<IDamage>();
-            if(dmg!= null)
-            {
-                dmg.takeDamage(meleeDamage);
-            }
-        }
-    }
-    
-
-    public void getMeleeStats(meleeStats melee)
-    {
-        if(melee == null)
-        {
-            return;
-        }
-        meleeDamage = melee.damage;
-        meleeRange = (int)melee.attackRate;
-    }
-    */
 
     public void takeDamage(int amount)
     {
@@ -281,10 +281,8 @@ public class playerController : MonoBehaviour, IDamage, IPickup
         {
             StartCoroutine(flashDamageScreen());
         }
-       
-        updatePlayerUI();
 
-        aud.PlayOneShot(audHurt[Random.Range(0, audHurt.Length)], audHurtVol);
+        updatePlayerUI();
 
         if (HP > HPOrig)
         {
@@ -295,7 +293,6 @@ public class playerController : MonoBehaviour, IDamage, IPickup
         {
             gamemanager.instance.youLose();
         }
-        
     }
 
     IEnumerator flashDamageScreen()
@@ -311,6 +308,7 @@ public class playerController : MonoBehaviour, IDamage, IPickup
         }
         else { yield return null; }
     }
+
     IEnumerator flashRestoreScreen()
     {
         if (gamemanager.instance != null && gamemanager.instance.playerRestoreScreen != null)
@@ -325,7 +323,6 @@ public class playerController : MonoBehaviour, IDamage, IPickup
         else { yield return null; }
     }
 
-
     void updatePlayerUI()
     {
         if (gamemanager.instance != null)
@@ -339,31 +336,33 @@ public class playerController : MonoBehaviour, IDamage, IPickup
             {
                 gamemanager.instance.playerStaminaBar.fillAmount = currentStamina / maxStamina;
             }
+
+            // Add UI for flashlight battery if needed
+            // if (gamemanager.instance.flashlightBatteryBar != null)
+            // {
+            //     gamemanager.instance.flashlightBatteryBar.fillAmount = flashlightBattery / flashlightBatteryMax;
+            // }
         }
     }
+
     void updateAmmoUI()
     {
         gamemanager.instance.updateAmmoUI(gunList[gunListPos].ammoCur, gunList[gunListPos].ammoMax);
-
     }
 
     public void getGunStats(gunStats gun)
     {
-
         gunList.Add(gun);
         gunListPos = gunList.Count - 1;
         changeGun();
-       
     }
 
     void selectGun()
     {
-        if(Input.GetAxis("Mouse ScrollWheel") > 0 && gunListPos < gunList.Count -1)
+        if (Input.GetAxis("Mouse ScrollWheel") > 0 && gunListPos < gunList.Count - 1)
         {
             gunListPos++;
             changeGun();
-
-
         }
         else if (Input.GetAxis("Mouse ScrollWheel") < 0 && gunListPos > 0)
         {
@@ -381,7 +380,7 @@ public class playerController : MonoBehaviour, IDamage, IPickup
         gunModel.GetComponent<MeshFilter>().sharedMesh = gunList[gunListPos].model.GetComponent<MeshFilter>().sharedMesh;
         gunModel.GetComponent<MeshRenderer>().sharedMaterial = gunList[gunListPos].model.GetComponent<MeshRenderer>().sharedMaterial;
         updateAmmoUI();
-     }
+    }
 
     void gunReload()
     {
