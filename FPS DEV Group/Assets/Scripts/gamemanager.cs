@@ -27,22 +27,11 @@ public class gamemanager : MonoBehaviour
 
     void Awake()
     {
-        // Check if instance already exists
-        if (instance != null && instance != this)
-        {
-            // Destroy the duplicate
-            Destroy(gameObject);
-            return;
-        }
-
         instance = this;
         player = GameObject.FindWithTag("Player");
         playerScript = player.GetComponent<playerController>();
 
         menuActive = null;
-
-        // Ensure time scale is set correctly
-        Time.timeScale = 1;
     }
 
     void Update()
