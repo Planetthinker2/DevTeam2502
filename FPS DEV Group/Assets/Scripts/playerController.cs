@@ -12,19 +12,26 @@ public class playerController : MonoBehaviour, IDamage, IPickup
     [SerializeField] LayerMask ignoreLayer;
 
     [Header("----- Main Player Stats -----")]
-    [SerializeField] int HP;
-    [SerializeField] int speed;
-    [SerializeField] int sprintMod;
-    [SerializeField] int jumpSpeed;
-    [SerializeField] int jumpMax;
-    [SerializeField] int gravity;
+    [Range(5, 50)][SerializeField] int HP;
+    [Range(1, 15)][SerializeField] int speed;
+    [Range(1, 10)][SerializeField] int sprintMod;
+    [Range(1, 10)][SerializeField] int jumpSpeed;
+    [Range(1, 10)][SerializeField] int jumpMax;
+    [Range(1, 50)][SerializeField] int gravity;
 
     [SerializeField] List<gunStats> gunList = new List<gunStats>();
     [SerializeField] GameObject gunModel;
     [SerializeField] Transform muzzleFlash;
-    [SerializeField] int shootDamage;
+    [Range(1, 10)][SerializeField] int shootDamage;
     [SerializeField] float shootRate;
-    [SerializeField] int shootDist;
+    [Range(1, 100)][SerializeField] int shootDist;
+
+    [Header("----------AUDIO---------")]
+    [SerializeField] AudioSource aud;
+    [SerializeField] AudioClip[] audHurt;
+    [Range(0,1)][SerializeField] float audHurtVol;
+    [SerializeField] AudioClip[] audWalk;
+    [Range(0, 1)][SerializeField] float audWalkVol;
 
     [Header("----- Player Stamina -----")]
     [SerializeField] int maxStamina;
@@ -34,9 +41,9 @@ public class playerController : MonoBehaviour, IDamage, IPickup
     [SerializeField] float staminaRegenDelay;
 
 
-    [Header("----- Player Melee Stats -----")]
-    [SerializeField] int meleeDamage;
-    [SerializeField] float meleeRange;
+    //[Header("----- Player Melee Stats -----")]
+    //[SerializeField] int meleeDamage;
+    //[SerializeField] float meleeRange;
 
     int jumpCount;
     int HPOrig;
@@ -51,6 +58,7 @@ public class playerController : MonoBehaviour, IDamage, IPickup
 
     bool isShooting;
     bool isSprinting;
+    bool isPlayingSteps;
     bool canRegenStamina;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -80,6 +88,11 @@ public class playerController : MonoBehaviour, IDamage, IPickup
     {
         if (controller.isGrounded)
         {
+            if(moveDir.magnitude > 0.03f && !isPlayingSteps)
+            {
+                StartCoroutine(playWalk());
+            }
+
             jumpCount = 0;
             playerVel =Vector3.zero;
         }
@@ -169,6 +182,18 @@ public class playerController : MonoBehaviour, IDamage, IPickup
             staminaRegenTimer = 0;
         }
     }
+    IEnumerator playWalk()
+    {
+        isPlayingSteps = true;
+        aud.PlayOneShot(audWalk[Random.Range(0, audWalk.Length)], audWalkVol);
+
+        if (!isSprinting)
+            yield return new WaitForSeconds(0.5f);
+        else
+            yield return new WaitForSeconds(0.2f);
+
+        isPlayingSteps = false;
+    }
 
     void jump()
     {
@@ -195,6 +220,7 @@ public class playerController : MonoBehaviour, IDamage, IPickup
 
         isShooting = true;
         shootTimer = 0;
+        aud.PlayOneShot(gunList[gunListPos].shootSound[Random.Range(0, gunList[gunListPos].shootSound.Length)], gunList[gunListPos].shootVol);
 
         StartCoroutine(flashMuzzle());
 
@@ -257,6 +283,8 @@ public class playerController : MonoBehaviour, IDamage, IPickup
         }
        
         updatePlayerUI();
+
+        aud.PlayOneShot(audHurt[Random.Range(0, audHurt.Length)], audHurtVol);
 
         if (HP > HPOrig)
         {
