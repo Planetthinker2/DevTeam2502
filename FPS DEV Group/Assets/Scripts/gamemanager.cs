@@ -15,7 +15,6 @@ public class gamemanager : MonoBehaviour
     [SerializeField] TextMeshProUGUI enemyCountText;
     [SerializeField] TMP_Text ammoText;
 
-
     public Image playerHPBar;
     public Image playerStaminaBar;
     public GameObject playerDamageScreen;
@@ -28,14 +27,23 @@ public class gamemanager : MonoBehaviour
 
     void Awake()
     {
+        // Check if instance already exists
+        if (instance != null && instance != this)
+        {
+            // Destroy the duplicate
+            Destroy(gameObject);
+            return;
+        }
+
         instance = this;
         player = GameObject.FindWithTag("Player");
         playerScript = player.GetComponent<playerController>();
 
         menuActive = null;
-    }
 
-   
+        // Ensure time scale is set correctly
+        Time.timeScale = 1;
+    }
 
     void Update()
     {
@@ -54,10 +62,9 @@ public class gamemanager : MonoBehaviour
         }
     }
 
-
     public void statePause()
     {
-        isPaused = !isPaused;
+        isPaused = true;
         Time.timeScale = 0;
         Cursor.visible = true;
         Cursor.lockState = CursorLockMode.Confined;
@@ -65,21 +72,26 @@ public class gamemanager : MonoBehaviour
 
     public void stateUnpause()
     {
-
-        isPaused = !isPaused;
+        isPaused = false;
         Time.timeScale = 1;
         Cursor.visible = false;
         Cursor.lockState = CursorLockMode.Locked;
-        menuActive.SetActive(false);
-        menuActive = null;
-    }
 
+        if (menuActive != null)
+        {
+            menuActive.SetActive(false);
+            menuActive = null;
+        }
+    }
 
     public void updateGameGoal(int amount)
     {
         totalEnemies += amount;
-        enemyCountText.text = totalEnemies.ToString("F0");
-        //UpdateEnemyCountUI();
+
+        if (enemyCountText != null)
+        {
+            enemyCountText.text = totalEnemies.ToString("F0");
+        }
 
         if (totalEnemies <= 0)
         {
@@ -92,14 +104,18 @@ public class gamemanager : MonoBehaviour
     public void youLose()
     {
         statePause();
-        menuActive = menuLose;     
+        menuActive = menuLose;
         menuActive.SetActive(true);
     }
+
     public void updateAmmoUI(int current, int max)
     {
-        ammoText.text = "Ammo ";
-        ammoText.text += current.ToString("F0");
-        ammoText.text += " / ";
-        ammoText.text += max.ToString("F0");
+        if (ammoText != null)
+        {
+            ammoText.text = "Ammo ";
+            ammoText.text += current.ToString("F0");
+            ammoText.text += " / ";
+            ammoText.text += max.ToString("F0");
+        }
     }
 }

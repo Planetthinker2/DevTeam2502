@@ -4,6 +4,7 @@ using UnityEngine.AI;
 
 public class enemyController : MonoBehaviour, IDamage
 {
+
     [Header("----- Enemy Settings -----")]
     [SerializeField] Renderer model;
     [SerializeField] Transform player;
@@ -27,6 +28,10 @@ public class enemyController : MonoBehaviour, IDamage
     [SerializeField] float attackRange = 2f;
     [SerializeField] float attackCooldown = 1.5f;
     [SerializeField] float attackAnimationDuration = 0.5f;
+
+    [Header("----- Collision Settings -----")]
+    [SerializeField] float pushForce = 1.0f;
+    [SerializeField] LayerMask playerLayer;
 
     bool hasDetectedPlayer = false;
     float nextAttackTime;
@@ -81,7 +86,7 @@ public class enemyController : MonoBehaviour, IDamage
             hasDetectedPlayer = IsPlayerInFOV();
         }
 
-        // Choose behavior based on detection state
+        // Choose behavior based on detection 
         if (hasDetectedPlayer)
         {
             ChasePlayer(distanceToPlayer);
@@ -143,7 +148,7 @@ public class enemyController : MonoBehaviour, IDamage
 
     void SetNewPatrolDestination()
     {
-        // Find random point on navmesh within radius
+        // Find random point within radius
         Vector3 randomDirection = Random.insideUnitSphere * patrolRadius;
         randomDirection += startPosition;
 
@@ -254,6 +259,42 @@ public class enemyController : MonoBehaviour, IDamage
 
         yield return new WaitForSeconds(attackAnimationDuration * 0.5f);
         isAttacking = false;
+    }
+
+    // Handle collision with player to prevent pushing through walls
+    void OnCollisionStay(Collision collision)
+    {
+        // Check if it's the player
+        if (((1 << collision.gameObject.layer) & playerLayer) != 0)
+        {
+            // Calculate push direction (away from enemy)
+            Vector3 pushDirection = (collision.transform.position - transform.position).normalized;
+
+            // Only push horizontally
+            pushDirection.y = 0;
+
+            // Only push if the player is too close
+            float distance = Vector3.Distance(transform.position, collision.transform.position);
+            if (distance < attackRange)
+            {
+                // Get the player's CharacterController
+                CharacterController playerController = collision.gameObject.GetComponent<CharacterController>();
+
+                if (playerController != null)
+                {
+                    // Check if the move would collide with a wall
+                    RaycastHit hit;
+                    if (Physics.Raycast(collision.transform.position, pushDirection, out hit, 1.0f))
+                    {
+                        // Don't push if there's a wall in the way
+                        return;
+                    }
+
+                    // Use CharacterController.Move for the player to respect collisions
+                    playerController.Move(pushDirection * pushForce * Time.deltaTime);
+                }
+            }
+        }
     }
 
     void OnDrawGizmosSelected()
