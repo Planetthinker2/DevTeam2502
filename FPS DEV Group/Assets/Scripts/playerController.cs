@@ -35,6 +35,17 @@ public class playerController : MonoBehaviour, IDamage, IPickup
     [SerializeField] int meleeDamage;
     [SerializeField] float meleeRange;
 
+
+    [Header("--------Audio-----------")]
+    [SerializeField] AudioSource aud;
+
+    [SerializeField] AudioClip[] audHurt;
+    [SerializeField] float audHurtVol;
+    [SerializeField] AudioClip[] audJump;
+    [SerializeField] float audJumpVol;
+    [SerializeField] AudioClip[] audWalk;
+    [SerializeField] float audWalkVol;
+
     [Header("----- Collision Settings -----")]
     [SerializeField] float collisionPushForce = 2.0f;
 
@@ -64,6 +75,7 @@ public class playerController : MonoBehaviour, IDamage, IPickup
 
     bool isShooting;
     bool isSprinting;
+    bool isPlayingSteps;
     bool canRegenStamina;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -110,6 +122,10 @@ public class playerController : MonoBehaviour, IDamage, IPickup
     {
         if (controller.isGrounded)
         {
+            if (moveDir.magnitude > 0.1f && !isPlayingSteps)
+            {
+                StartCoroutine(playWalk());
+            }
             jumpCount = 0;
             playerVel.y = 0;
         }
@@ -227,6 +243,19 @@ public class playerController : MonoBehaviour, IDamage, IPickup
         }
     }
 
+    IEnumerator playWalk()
+    {
+        isPlayingSteps = true;
+        aud.PlayOneShot(audWalk[Random.Range(0, audWalk.Length)], audWalkVol);
+
+        if (!isSprinting)
+            yield return new WaitForSeconds(0.5f);
+        else
+            yield return new WaitForSeconds(0.2f);
+
+        isPlayingSteps = false;
+    }
+
     void jump()
     {
         if (Input.GetButtonDown("Jump") && jumpCount < jumpMax && currentStamina >= jumpStaminaCost)
@@ -236,6 +265,9 @@ public class playerController : MonoBehaviour, IDamage, IPickup
 
             // Apply jump force
             playerVel.y = jumpSpeed;
+
+            // Play Jump sound
+            aud.PlayOneShot(audJump[Random.Range(0, audJump.Length)], audJumpVol);
 
             // Subtract the cost of jumping from the current stamina
             currentStamina -= jumpStaminaCost;
@@ -251,7 +283,7 @@ public class playerController : MonoBehaviour, IDamage, IPickup
     {
         isShooting = true;
         shootTimer = 0;
-
+        aud.PlayOneShot(gunList[gunListPos].shootSound[Random.Range(0, gunList[gunListPos].shootSound.Length)], gunList[gunListPos].shootVol);
         StartCoroutine(flashMuzzle());
 
         RaycastHit hit;
@@ -283,6 +315,8 @@ public class playerController : MonoBehaviour, IDamage, IPickup
         }
 
         updatePlayerUI();
+
+        aud.PlayOneShot(audHurt[Random.Range(0, audHurt.Length)], audHurtVol);
 
         if (HP > HPOrig)
         {
