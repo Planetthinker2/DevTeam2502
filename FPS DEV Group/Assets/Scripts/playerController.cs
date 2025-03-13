@@ -61,6 +61,16 @@ public class playerController : MonoBehaviour, IDamage, IPickup
     [SerializeField] float flashlightBatteryDrain = 5f;  // Per second
     [SerializeField] float flashlightBatteryRecharge = 7.5f; // Per second
 
+    [Header("----- Key System -----")]
+    [Tooltip("List of keys the player has collected.")]
+    [SerializeField] List<string> keysIDs = new List<string>();
+
+    [Tooltip("Maximum distance at which player can interact with doors.")]
+    [SerializeField] float interactDistance = 2f;
+
+    [Tooltip("Key that player must press to interact with doors.")]
+    [SerializeField] KeyCode interactKey = KeyCode.E;
+
     int jumpCount;
     int HPOrig;
     int gunListPos;
@@ -104,6 +114,7 @@ public class playerController : MonoBehaviour, IDamage, IPickup
         shootTimer += Time.deltaTime;
         manageStamina();
         manageFlashlight();
+        CheckInteraction();
 
         if (Input.GetButton("Fire1") && gunList.Count > 0 && gunList[gunListPos].ammoCur > 0 && shootTimer >= shootRate && !isShooting)
         {
@@ -226,6 +237,38 @@ public class playerController : MonoBehaviour, IDamage, IPickup
 
         // Update UI (you can add a flashlight battery UI element)
         updatePlayerUI();
+    }
+
+    public void AddKey(string keyID)
+    {
+        keysIDs.Add(keyID);
+        Debug.Log("Picked up key: " + keyID);
+    }
+
+    void CheckInteraction()
+    {
+        if(Input.GetKeyDown(interactKey))
+        {
+            RaycastHit hit;
+            if (Physics.Raycast(Camera.main.transform.position, Camera.main.transform.forward, out hit, interactDistance))
+            {
+                // Check if looking at a door
+                door door = hit.collider.GetComponent<door>();
+                if(door != null)
+                {
+                    // Try using each key on the door
+                    foreach (string keyID in keysIDs)
+                    {
+                        if (door.UseKey(keyID))
+                        {
+                            break;
+                        }
+                    }
+
+                    door.Interact();
+                }
+            }
+        }
     }
 
     void sprint()

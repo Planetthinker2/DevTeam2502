@@ -2133,6 +2133,31 @@ MonoBehaviour:
   staminaRegenDelay: 1
   meleeDamage: 0
   meleeRange: 0
+  aud: {fileID: 3163192537752536414}
+  audHurt:
+  - {fileID: 8300000, guid: 3bd37faa1e29f944aae6c2f201cf9de2, type: 3}
+  - {fileID: 8300000, guid: 25c660bb9338fc840892b4325824f7ba, type: 3}
+  - {fileID: 8300000, guid: 81b2fbac2b1ee81498978f8b1872491f, type: 3}
+  - {fileID: 8300000, guid: 30ccd67c15621964bacf525ca8848bf7, type: 3}
+  - {fileID: 8300000, guid: 24d327ad02aec2e498c7dfe1822fdfd0, type: 3}
+  - {fileID: 8300000, guid: 1c52e4422d856bd42b55858fd2f899ed, type: 3}
+  audHurtVol: 0.5
+  audJump:
+  - {fileID: 8300000, guid: 97630285b42bd904faa2f0ebe259fbda, type: 3}
+  - {fileID: 8300000, guid: 7e5e2535ec36a6c44aa43dc78f5b3f35, type: 3}
+  - {fileID: 8300000, guid: 92202fb0bef52ea4992278466f49050d, type: 3}
+  audJumpVol: 0.5
+  audWalk:
+  - {fileID: 8300000, guid: df889b9bf86ed434ab45712425e4506b, type: 3}
+  - {fileID: 8300000, guid: 93433eaa4f7c7b64baa59c512390147f, type: 3}
+  - {fileID: 8300000, guid: 75b072a5102c41c41889744bc225aaf7, type: 3}
+  - {fileID: 8300000, guid: e887b21170438204fa5f91eee737682d, type: 3}
+  - {fileID: 8300000, guid: 3fce7a6781ac6a148b60d2adf0ff41d3, type: 3}
+  - {fileID: 8300000, guid: 22e66c6ef7526e9419d6aa6771aa0919, type: 3}
+  - {fileID: 8300000, guid: f53978dfaee94714198d01f6a10bfb7b, type: 3}
+  - {fileID: 8300000, guid: 6e3580addabd06c429669a69589890bc, type: 3}
+  - {fileID: 8300000, guid: deff3d99a6d099b4d9651763b75dc404, type: 3}
+  audWalkVol: 0.3
   collisionPushForce: 2
   flashlightObject: {fileID: 7117799253974816950}
   flashlightLight: {fileID: 380364284152515451}
@@ -2144,6 +2169,9 @@ MonoBehaviour:
   flashlightBatteryMax: 100
   flashlightBatteryDrain: 0
   flashlightBatteryRecharge: 7.5
+  keysIDs: []
+  interactDistance: 2
+  interactKey: 101
 --- !u!95 &7150399564114905804
 Animator:
   serializedVersion: 7
@@ -2206,7 +2234,7 @@ CapsuleCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 2
@@ -2545,7 +2573,6 @@ GameObject:
   - component: {fileID: 3193692779248856472}
   - component: {fileID: 352809914509366251}
   - component: {fileID: 5028397897214764914}
-  - component: {fileID: 6625287369602691356}
   m_Layer: 0
   m_Name: Flashlight Beam
   m_TagString: Untagged
@@ -2621,28 +2648,6 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!64 &6625287369602691356
-MeshCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8147918428594411054}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 5
-  m_Convex: 0
-  m_CookingOptions: 30
-  m_Mesh: {fileID: 10210, guid: 0000000000000000e000000000000000, type: 0}
 --- !u!1 &8195108353502625270
 GameObject:
   m_ObjectHideFlags: 0

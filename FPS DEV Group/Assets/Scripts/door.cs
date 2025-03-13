@@ -5,19 +5,33 @@ using UnityEngine.UI;
 using TMPro;
 
 /// <summary>
-/// Door script that can be opened and closed. Optionally locked with a key.
+/// Door script that allows doors be opened and closed. Optionally locked with a key.
 /// </summary>
 
 public class door : MonoBehaviour
 {
     [Header("----- Door Settings -----")]
+    [Tooltip("The door mesh or object that will rotate when opening/closing")]
     [SerializeField] Transform doorModel;
+
+    [Tooltip("How far the door opens in degrees")]
     [SerializeField] float openAngle = 90f;
+
+    [Tooltip("How fast the door opens and closes (higher = faster)")]
     [SerializeField] float openSpeed = 2.0f;
+
+    [Tooltip("If checked, door will be locked and will require a key to open")]
     [SerializeField] bool startLocked;
-    [SerializeField] string keyID; // ID that must match with a key to unlock
-    [SerializeField] AudioClip doorSound; // Optional audio if wanted
-    [SerializeField] float soundVolume = 0.5f; // Optional volume if wanted
+
+    [Tooltip("Unique identifier that must match a key's ID to unlock this door")]
+    [SerializeField] string keyID;
+
+    [Tooltip("Sound played when door opens or closes")]
+    [SerializeField] AudioClip doorSound;
+
+    [Tooltip("Volume level for door sounds")]
+    [SerializeField] float soundVolume = 0.5f;
+
 
     public bool isOpen = false;
     public bool isMoving = false;
